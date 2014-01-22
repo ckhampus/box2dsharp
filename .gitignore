@@ -149,3 +149,22 @@ $RECYCLE.BIN/
 
 # Mac crap
 .DS_Store
+
+### MonoDevelop ###
+#User Specific
+*.userprefs
+*.usertasks
+
+#Mono Project Files
+*.pidb
+*.resources
+test-results/
+
+### XamarinStudio ###
+bin
+obj
+userprefs
+
+# Box2D Sources
+
+Box2D.Swig/Box2D/

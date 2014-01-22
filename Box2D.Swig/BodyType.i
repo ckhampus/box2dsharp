@@ -1,0 +1,1 @@
+%ignore b2BodyType;
