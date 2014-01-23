@@ -172,7 +172,7 @@
 %include "Common.i"
 %include "Structs.i"
 
-%include "Body.i"
+%include "Dynamics/Body.i"
 %include "BodyType.i"
 %include "ChainShape.i"
 %include "CircleShape.i"

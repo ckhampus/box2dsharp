@@ -10,3 +10,10 @@
 %attribute(b2Contact, int, ChildIndexB, GetChildIndexB);
 %attribute(b2Contact, float, Friction, GetFriction, SetFriction);
 %attribute(b2Contact, float, Restitution, GetRestitution, SetRestitution);
+
+%typemap(cscode) b2Contact %{
+  internal void Reset(IntPtr cPtr)
+  {
+    swigCPtr = new HandleRef(this, cPtr);
+  }
+%}

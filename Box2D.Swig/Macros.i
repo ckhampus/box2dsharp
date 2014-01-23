@@ -32,65 +32,65 @@
 //
 // The macro must be invoked BEFORE including the file that declares the type.
 %define CS_STRUCT2_SHARED_PART(TYPE, CTYPE, CSTYPE)
-    %ignore ::TYPE;
-    %typemap(ctype)                 TYPE*, TYPE&, TYPE[ANY]  %{ TYPE* %}
-    %typemap(in)                    TYPE*, TYPE&, TYPE[ANY]  %{ $1 = $input; %}
-    %typemap(varin)                 TYPE*, TYPE&, TYPE[ANY]  %{ $1 = $input; %}
-    //%typemap(memberin)              TYPE*, TYPE&, TYPE[ANY]  %{ $1 = $input; %}
-    %typemap(out, null="NULL")      TYPE*, TYPE&  %{ $result = $1; %}
-    %typemap(varout, null="NULL")   TYPE*, TYPE&  %{ $result = $1; %}
-    %typemap(memberout, null="NULL")TYPE*, TYPE&  %{ $result = $1; %}
-    %typemap(imtype, out="IntPtr")  TYPE*, TYPE&  %{ ref CSTYPE %}
-    %typemap(imtype)                TYPE* OUTPUT, TYPE& OUTPUT %{ out CSTYPE %}
-    %typemap(imtype, out="IntPtr")  TYPE[ANY] %{ CSTYPE[] %}
-    %typemap(cstype, out="CSTYPE")  TYPE*, TYPE&  %{ ref CSTYPE %}
-    %typemap(cstype, out="CSTYPE")  TYPE* OUTPUT, TYPE& OUTPUT %{ out CSTYPE %}
-    %typemap(cstype, out="IntPtr")  TYPE[ANY] %{ CSTYPE[] %}
-    %typemap(cstype)                const TYPE*, const TYPE&   %{ CSTYPE %}
-    %typemap(csin)                  TYPE*, TYPE&  %{ ref $csinput %}
-    %typemap(csin)                  TYPE* OUTPUT, TYPE& OUTPUT %{ out $csinput %}
-    %typemap(csin)                  const TYPE*, const TYPE&   %{ ref $csinput %}
-    %typemap(csin)                  TYPE[ANY] %{ $csinput %}
-    %typemap(csout, excode=SWIGEXCODE) TYPE*, TYPE& {
-        IntPtr ptr = $imcall;$excode
-        CSTYPE ret = (CSTYPE)Marshal.PtrToStructure(ptr, typeof(CSTYPE));
-        return ret;
+  %ignore ::TYPE;
+  %typemap(ctype)                 TYPE*, TYPE&, TYPE[ANY]  %{TYPE*%}
+  %typemap(in)                    TYPE*, TYPE&, TYPE[ANY]  %{$1 = $input;%}
+  %typemap(varin)                 TYPE*, TYPE&, TYPE[ANY]  %{$1 = $input;%}
+  //%typemap(memberin)              TYPE*, TYPE&, TYPE[ANY]  %{ $1 = $input; %}
+  %typemap(out, null="NULL")      TYPE*, TYPE&  %{$result = $1;%}
+  %typemap(varout, null="NULL")   TYPE*, TYPE&  %{$result = $1;%}
+  %typemap(memberout, null="NULL")TYPE*, TYPE&  %{$result = $1;%}
+  %typemap(imtype, out="IntPtr")  TYPE*, TYPE&  %{ref CSTYPE%}
+  %typemap(imtype)                TYPE* OUTPUT, TYPE& OUTPUT %{out CSTYPE%}
+  %typemap(imtype, out="IntPtr")  TYPE[ANY] %{CSTYPE[]%}
+  %typemap(cstype, out="CSTYPE")  TYPE*, TYPE&  %{ref CSTYPE%}
+  %typemap(cstype, out="CSTYPE")  TYPE* OUTPUT, TYPE& OUTPUT %{out CSTYPE%}
+  %typemap(cstype, out="IntPtr")  TYPE[ANY] %{ CSTYPE[] %}
+  %typemap(cstype)                const TYPE*, const TYPE&   %{CSTYPE%}
+  %typemap(csin)                  TYPE*, TYPE&  %{ref $csinput%}
+  %typemap(csin)                  TYPE* OUTPUT, TYPE& OUTPUT %{out $csinput%}
+  %typemap(csin)                  const TYPE*, const TYPE&   %{ref $csinput%}
+  %typemap(csin)                  TYPE[ANY] %{$csinput%}
+  %typemap(csout, excode=SWIGEXCODE) TYPE*, TYPE& {
+    IntPtr ptr = $imcall;$excode
+    CSTYPE ret = (CSTYPE)Marshal.PtrToStructure(ptr, typeof(CSTYPE));
+    return ret;
+  }
+  %typemap(csvarout, excode=SWIGEXCODE2) TYPE*, TYPE&
+  %{
+    get { 
+      IntPtr ptr = $imcall;$excode
+      CSTYPE ret = (CSTYPE)Marshal.PtrToStructure(ptr, typeof(CSTYPE));
+      return ret;
     }
-    %typemap(csvarout, excode=SWIGEXCODE2) TYPE*, TYPE&
-    %{
-        get { 
-            IntPtr ptr = $imcall;$excode
-            CSTYPE ret = (CSTYPE)Marshal.PtrToStructure(ptr, typeof(CSTYPE));
-            return ret;
-        }
-    %}
-    %apply TYPE* OUTPUT { TYPE* result };
-    %apply TYPE& OUTPUT { TYPE& result };
+  %}
+  %apply TYPE* OUTPUT {TYPE* result};
+  %apply TYPE& OUTPUT {TYPE& result};
 %enddef
 
 #ifndef COMPACT_FRAMEWORK_COMPATIBLE
     %define CS_STRUCT2(TYPE, CTYPE, CSTYPE)
         CS_STRUCT2_SHARED_PART(TYPE, CTYPE, CSTYPE)
-        %typemap(ctype)                 TYPE          %{ CTYPE %}
-        %typemap(in)                    TYPE          %{ $1 = *(TYPE*)&$input; %}
-        %typemap(varin)                 TYPE          %{ $1 = *(TYPE*)&$input; %}
+        %typemap(ctype)                 TYPE          %{CTYPE%}
+        %typemap(in)                    TYPE          %{$1 = *(TYPE*)&$input;%}
+        %typemap(varin)                 TYPE          %{$1 = *(TYPE*)&$input;%}
         //%typemap(memberin)              TYPE          %{ $1 = *(TYPE*)&$input; %}
-        %typemap(out, null=#CTYPE "()") TYPE          %{ $result = *(CTYPE*)&$1; %}
-        %typemap(varout, null=#CTYPE "()") TYPE       %{ $result = *(CTYPE*)&$1; %}
-        %typemap(memberout, null=#CTYPE "()") TYPE    %{ $result = *(CTYPE*)&$1; %}
-        %typemap(imtype)                TYPE          %{ CSTYPE %}
-        %typemap(cstype)                TYPE          %{ CSTYPE %}
-        %typemap(csin)                  TYPE          %{ $csinput %}
+        %typemap(out, null=#CTYPE "()") TYPE          %{$result = *(CTYPE*)&$1;%}
+        %typemap(varout, null=#CTYPE "()") TYPE       %{$result = *(CTYPE*)&$1;%}
+        %typemap(memberout, null=#CTYPE "()") TYPE    %{$result = *(CTYPE*)&$1;%}
+        %typemap(imtype)                TYPE          %{CSTYPE%}
+        %typemap(cstype)                TYPE          %{CSTYPE%}
+        %typemap(csin)                  TYPE          %{$csinput%}
         %typemap(csout, excode=SWIGEXCODE) TYPE {
-            CSTYPE ret = $imcall;$excode
-            return ret;
-        }
+    CSTYPE ret = $imcall;$excode
+    return ret;
+  }
         %typemap(csvarout, excode=SWIGEXCODE2) TYPE
         %{
-            get { 
-                CSTYPE ret = $imcall;$excode
-                return ret;
-            }
+    get {
+      CSTYPE ret = $imcall;$excode
+      return ret;
+    }
         %}
     %enddef
 #else
@@ -98,9 +98,9 @@
         CS_STRUCT2_SHARED_PART(TYPE, CTYPE, CSTYPE)
         // In the .NET Compact Framework, only a pointer to a structure can be returned.
         // for the time being we'll use a thread-unsafe static variable...
-        %typemap(ctype, out="CTYPE*")   TYPE          %{ CTYPE %}
-        %typemap(in)                    TYPE          %{ $1 = *(TYPE*)&$input; %}
-        %typemap(varin)                 TYPE          %{ $1 = *(TYPE*)&$input; %}
+        %typemap(ctype, out="CTYPE*")   TYPE          %{CTYPE%}
+        %typemap(in)                    TYPE          %{$1 = *(TYPE*)&$input;%}
+        %typemap(varin)                 TYPE          %{$1 = *(TYPE*)&$input;%}
         //%typemap(memberin)              TYPE          %{ $1 = *(TYPE*)&$input; %}
         %typemap(out, null="NULL")      TYPE          %{ 
             // Not thread safe! (Only structure pointers can be returned from .NET Compact Framework)
@@ -120,21 +120,21 @@
             out_temp = *(CTYPE*)&$1; 
             $result = &out_temp; 
         %}
-        %typemap(imtype, out="IntPtr")  TYPE          %{ CSTYPE %}
-        %typemap(cstype)                TYPE          %{ CSTYPE %}
-        %typemap(csin)                  TYPE          %{ $csinput %}
+        %typemap(imtype, out="IntPtr")  TYPE          %{CSTYPE%}
+        %typemap(cstype)                TYPE          %{CSTYPE%}
+        %typemap(csin)                  TYPE          %{$csinput%}
         %typemap(csout, excode=SWIGEXCODE) TYPE {
-            IntPtr ptr = $imcall;$excode
-            CSTYPE ret = (CSTYPE)Marshal.PtrToStructure(ptr, typeof(CSTYPE));
-            return ret;
+          IntPtr ptr = $imcall;$excode
+          CSTYPE ret = (CSTYPE)Marshal.PtrToStructure(ptr, typeof(CSTYPE));
+          return ret;
         }
         %typemap(csvarout, excode=SWIGEXCODE2) TYPE
         %{
-            get {
-                IntPtr ptr = $imcall;$excode
-                CSTYPE ret = (CSTYPE)Marshal.PtrToStructure(ptr, typeof(CSTYPE));
-                return ret;
-            }
+          get {
+            IntPtr ptr = $imcall;$excode
+            CSTYPE ret = (CSTYPE)Marshal.PtrToStructure(ptr, typeof(CSTYPE));
+            return ret;
+          }
         %}
     %enddef
 #endif

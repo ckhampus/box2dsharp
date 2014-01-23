@@ -1,6 +1,7 @@
 // %apply void *VOID_INT_PTR { void * }
 
 CS_MARSHAL_INTPTR(void*);
+CS_MARSHAL_INTPTR(b2Contact*);
 
 %typemap(csimports) SWIGTYPE %{ 
 using System;
@@ -39,6 +40,7 @@ using System.Collections.Generic;
     return (obj == null) ? new HandleRef(null, IntPtr.Zero) : obj.swigCPtr;
   }
 %}
+%array_functions(b2Contact, ContactArray);
 
 // %array_functions(b2Vec2, Vec2Array);
 

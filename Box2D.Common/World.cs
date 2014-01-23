@@ -7,6 +7,7 @@ namespace Box2D
     public delegate void ContactEventHandler(object sender,ContactEventArgs e);
     public delegate void PreSolveEventHandler(object sender,PreSolveEventArgs e);
     public delegate void PostSolveEventHandler(object sender,PostSolveEventArgs e);
+
     public class ContactEventArgs : EventArgs
     {
         public Contact Contact { get; set; }
@@ -38,10 +39,6 @@ namespace Box2D
 
         private ContactListener _contactListener;
 
-        /// <summary>
-        /// Gets or sets the contact listener.
-        /// </summary>
-        /// <value>The contact listener.</value>
         public ContactListener ContactListener
         {
             get
@@ -77,39 +74,6 @@ namespace Box2D
         {
             if (PostSolve != null)
                 PostSolve(this, e);
-        }
-
-        public Body CreateBody(BodyDef  def)
-        {
-            var bodyPtr = NativeCreateBody(def);
-            var body = _freeBodies.GetObject();
-            body.Reset(bodyPtr);
-            _bodies.Add(bodyPtr, body);
-            return body;
-        }
-
-        public void DestroyBody(Body body)
-        {
-            body.UserData = IntPtr.Zero;
-            _bodies.Remove(body.Handle);
-
-            foreach (var fixture in body.Fixtures)
-            {
-                fixture.UserData = IntPtr.Zero;
-                _fixtures.Remove(fixture.Handle);
-            }
-
-            body.Fixtures.Clear();
-
-            foreach (var joint in body.Joints)
-            {
-                DestroyJoint(joint.joint);
-            }
-
-            body.Joints.Clear();
-
-            NativeDestroyBody(body);
-            _freeBodies.PutObject(body);
         }
 
         class CustomContactListener : ContactListener

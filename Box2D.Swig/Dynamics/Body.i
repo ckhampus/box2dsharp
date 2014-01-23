@@ -1,6 +1,3 @@
-%ignore b2Body::ApplyForce;
-%ignore b2Body::ApplyForceToCenter;
-// %ignore b2Body::CreateFixture;
 %ignore b2Body::GetFixtureList;
 %ignore b2Body::GetWorld;
 %ignore b2Body::GetJointList;
@@ -10,33 +7,30 @@
 %rename(Body) b2Body;
 %typemap(csclassmodifiers) b2Body "public partial class"
 
-// %extend b2Body {
-// 	void* CreateFixture(const b2FixtureDef* def)
-// 	{
-// 		return (void*)CreateFixture(def);
-// 	}
-// }
-
-// %ignore b2Body::CreateFixture;
-%rename(NativeCreateFixture) b2Body::CreateFixture;
-%csmethodmodifiers b2Body::CreateFixture "private";
-%typemap(cstype) b2Fixture* CreateFixture %{ IntPtr %}
 %typemap(csout, excode=SWIGEXCODE) b2Fixture* CreateFixture {
-    IntPtr cPtr = $imcall;$excode
-    return cPtr;
-}
+    IntPtr fixturePtr = $imcall;$excode
+    Fixture fixture = World._freeFixtures.GetObject();
+    fixture.Reset(this, fixturePtr);
+    World._fixtures.Add(fixturePtr, fixture);
+    Fixtures.Add(fixture);
+    return fixture;
+  }
 
-%rename(NativeDestroyFixture) b2Body::DestroyFixture;
-%csmethodmodifiers b2Body::DestroyFixture "private";
+%typemap(csout, excode=SWIGEXCODE) void DestroyFixture {
+    $imcall;$excode
+    World._fixtures.Remove(fixture.Handle);
+    Fixtures.Remove(fixture);
+    World._freeFixtures.PutObject(fixture);
+  }
 
 %typemap(cstype, out="BodyType") b2BodyType "BodyType"
 %typemap(csout, excode=SWIGEXCODE) b2BodyType %{
   return (BodyType)$imcall;$excode
 %}
 %typemap(csvarout, excode=SWIGEXCODE2) b2BodyType %{
-    get {
-      return (BodyType)$imcall;$excode
-    }
+  get {
+    return (BodyType)$imcall;$excode
+  }
 %}
 
 %attributeref(b2Body, b2Transform, Transform, GetTransform);
@@ -60,23 +54,27 @@
 %attribute(b2Body, bool, IsActive, IsActive, SetActive);
 %attribute(b2Body, bool, IsFixedRotation, IsFixedRotation, SetFixedRotation);
 
-// %typemap(cscode) b2Body %{
-// 	public List<Fixture> Fixtures { get; private set; }
+%typemap(cscode) b2Body %{
+  public World World { get; private set; }
 
-//   public b2Fixture CreateFixture(b2FixtureDef def) {
-//     b2Fixture ret = NativeCreateFixture(def);
-//     Fixtures.Add(ret);
-//     return ret;
-//   }
+  public List<Fixture> Fixtures { get; set; }
 
-//   public b2Fixture CreateFixture(b2Shape shape, float density) {
-//     b2Fixture ret = NativeCreateFixture(shape, density);
-//     Fixtures.Add(ret);
-//     return ret;
-//   }
+  public List<JointEdge> Joints { get; set; }
 
-//   public void DestroyFixture(b2Fixture fixture) {
-//     NativeDestroyFixture(fixture);
-//     Fixtures.Remove(fixture);
-//   }
-// %}
+  internal Body(World world) : this(IntPtr.Zero, false)
+  {
+      World = world;
+  }
+
+  internal void Reset(IntPtr cPtr)
+  {
+    swigCPtr = new HandleRef(this, cPtr);
+    UserData = IntPtr.Zero;
+    foreach (var fixture in Fixtures)
+    {
+      World._freeFixtures.PutObject(fixture);
+    }
+    Fixtures.Clear();
+    Joints.Clear();
+  }
+%}

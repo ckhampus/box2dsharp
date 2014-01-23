@@ -1,17 +1,10 @@
 %ignore b2World::GetContactManager;
 %ignore b2World::GetProfile;
 %ignore b2World::Dump;
+%ignore b2World::DrawDebugData;
 
 %rename(World) b2World;
 %typemap(csclassmodifiers) b2World "public partial class"
-
-%rename(NativeCreateBody) b2World::CreateBody;
-%csmethodmodifiers b2World::CreateBody "private";
-%typemap(cstype) b2Body* CreateBody %{ IntPtr %}
-%typemap(csout, excode=SWIGEXCODE) b2Body* CreateBody {
-    IntPtr cPtr = $imcall;$excode
-    return cPtr;
-}
 
 %typemap(csbody) b2World %{
   private HandleRef swigCPtr;
@@ -23,6 +16,10 @@
   internal Dictionary<IntPtr, Fixture> _fixtures;
   internal Dictionary<IntPtr, Joint> _joints;
 
+  internal List<IntPtr> _contactPtrs;
+  internal List<Contact> _contacts;
+  internal List<Contact> _freeContacts;
+
   internal IntPtr Handle { get { return swigCPtr.Handle; } }
 
   internal $csclassname(IntPtr cPtr, bool cMemoryOwn) {
@@ -30,10 +27,12 @@
     swigCPtr = new HandleRef(this, cPtr);
 
     _freeBodies = new ObjectPool<Body>(() => new Body(this));
-  	_freeFixtures = new ObjectPool<Fixture>(() => new Fixture(IntPtr.Zero, true));
+  	_freeFixtures = new ObjectPool<Fixture>(() => new Fixture(IntPtr.Zero, false));
   	_bodies = new Dictionary<IntPtr, Body>();
   	_fixtures = new Dictionary<IntPtr, Fixture>();
   	_joints = new Dictionary<IntPtr, Joint>();
+
+    _contacts = new List<Contact>();
 
     ContactListener = new CustomContactListener(this);
   }
@@ -41,11 +40,68 @@
   internal static HandleRef getCPtr($csclassname obj) {
     return (obj == null) ? new HandleRef(null, IntPtr.Zero) : obj.swigCPtr;
   }
+
+  public List<Body> Bodies { get { return _bodies.Values.ToList() } }
+
+  public List<Joint> Joints { get { return _joints.Values.ToList() } }
+
+  public List<Contact> Contacts {
+    get
+    {
+      int numContacts = ContactCount;
+      if (numContacts > _contacts.Capacity)
+      {
+        int newSize = 2 * numContacts;
+        _contacts.Capacity = newSize;
+      }
+
+      IntPtr contactsArray = GetContactList();
+
+      _contacts.Clear();
+
+      for (int i = 0; i < numContacts; i++)
+      {
+        _contacts.Add(Box2D.ContactArray_getitem(contactsArray, i));
+      }
+
+      return _contacts;
+    }
+  }
 %}
 
-%rename(NativeDestroyBody) b2World::DestroyBody;
-%csmethodmodifiers b2World::DestroyBody "private";
+%typemap(csout, excode=SWIGEXCODE) b2Body* CreateBody {
+    IntPtr bodyPtr = $imcall;$excode
+    Body body = _freeBodies.GetObject();
+    body.Reset(bodyPtr);
+    _bodies.Add(bodyPtr, body);
+    return body;
+  }
+
+%typemap(csout, excode=SWIGEXCODE) void DestroyBody {
+    body.UserData = IntPtr.Zero;
+    _bodies.Remove(body.Handle);
+
+    foreach (var fixture in body.Fixtures)
+    {
+      fixture.UserData = IntPtr.Zero;
+      _fixtures.Remove(fixture.Handle);
+    }
+
+    body.Fixtures.Clear();
+
+    foreach (JointEdge joint in body.Joints)
+    {
+      DestroyJoint(joint.Joint);
+    }
+
+    body.Joints.Clear();
+
+    $imcall;$excode
+    _freeBodies.PutObject(body);
+  }
+
 %csmethodmodifiers b2World::SetContactListener "private";
+%csmethodmodifiers b2World::GetContactList "private";
 
 %attribute(b2World, bool, AllowSleeping, GetAllowSleeping, SetAllowSleeping);
 %attribute(b2World, bool, WarmStarting, GetWarmStarting, SetWarmStarting);
